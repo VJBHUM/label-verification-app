@@ -1,0 +1,21 @@
+# One-click deploy on Render (https://render.com).
+# After creating the service, set ANTHROPIC_API_KEY and APP_ACCESS_CODE in the
+# dashboard. APP_SECRET_KEY is generated automatically.
+services:
+  - type: web
+    name: ttb-label-verification
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: APP_ACCESS_CODE
+        sync: false
+      - key: APP_SECRET_KEY
+        generateValue: true
+      - key: LABEL_VERIFIER_MODEL
+        value: claude-haiku-4-5
+      - key: PYTHON_VERSION
+        value: "3.12.7"

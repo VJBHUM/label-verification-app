@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign in · Label Verification</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="login-body">
+  <main class="login-wrap">
+    <div class="login-card">
+      <span class="logo login-logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3l7 3v5c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3z" />
+          <path d="M9 12l2 2 4-4" />
+        </svg>
+      </span>
+      <h1 class="login-title">Label Verification</h1>
+      <p class="login-sub">Enter your access code to continue</p>
+
+      <form id="login-form">
+        <label class="input-label" for="passcode">Access code</label>
+        <input id="passcode" name="passcode" type="password" autocomplete="current-password"
+               autofocus required />
+        <button id="login-btn" class="primary-btn" type="submit">Sign in</button>
+      </form>
+
+      <div id="login-error" class="status-line error hidden" role="alert" aria-live="assertive"></div>
+    </div>
+    <p class="login-foot">Authorized use only · activity is rate-limited</p>
+  </main>
+
+  <script src="/login.js"></script>
+</body>
+</html>

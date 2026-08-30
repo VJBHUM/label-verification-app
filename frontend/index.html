@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Label Verification · TTB Compliance</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="appbar">
+    <div class="appbar-inner">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3l7 3v5c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3z" />
+            <path d="M9 12l2 2 4-4" />
+          </svg>
+        </span>
+        <span class="brand-text">
+          <span class="brand-name">Label Verification</span>
+          <span class="brand-sub">TTB compliance review</span>
+        </span>
+      </div>
+      <button id="signout-btn" class="signout" type="button">Sign out</button>
+    </div>
+  </header>
+
+  <div class="shell">
+    <div class="segmented" role="tablist" aria-label="Verification mode">
+      <button id="tab-single" class="seg active" type="button" role="tab" aria-selected="true">Single label</button>
+      <button id="tab-batch" class="seg" type="button" role="tab" aria-selected="false">Batch import</button>
+    </div>
+
+    <main>
+      <!-- ---------- SINGLE ---------- -->
+      <section id="panel-single" class="panel" role="tabpanel" aria-label="Check one label">
+        <div class="two-col">
+          <div class="col">
+            <span class="field-label"><span class="step">1</span> Label photo</span>
+            <form id="single-form">
+              <div id="dropzone" class="dropzone" role="button" tabindex="0"
+                   aria-label="Choose a label image" aria-describedby="dropzone-text">
+                <img id="preview" class="preview hidden" alt="Selected label preview" />
+                <div id="dropzone-text">
+                  <span class="dz-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor"
+                         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <path d="M17 8l-5-5-5 5" /><path d="M12 3v13" />
+                    </svg>
+                  </span>
+                  <span class="big">Drop a label image here</span>
+                  <span class="small">or click to browse — PNG, JPEG, WEBP</span>
+                </div>
+                <input id="image-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden />
+              </div>
+            </form>
+          </div>
+
+          <div class="col">
+            <span class="field-label"><span class="step">2</span> Application details</span>
+            <!-- fields live in the same form via the `form` attribute -->
+            <label class="input-label" for="brand_name">Brand name <span class="req">required</span></label>
+            <input form="single-form" id="brand_name" name="brand_name" type="text" placeholder="OLD TOM DISTILLERY" maxlength="500" required />
+
+            <div class="grid-2">
+              <div>
+                <label class="input-label" for="beverage_type">Beverage type</label>
+                <select form="single-form" id="beverage_type" name="beverage_type">
+                  <option value="">— select —</option>
+                  <option value="Distilled Spirits">Distilled Spirits</option>
+                  <option value="Wine">Wine</option>
+                  <option value="Malt Beverage">Malt Beverage</option>
+                </select>
+              </div>
+              <div>
+                <label class="input-label" for="net_contents">Net contents</label>
+                <input form="single-form" id="net_contents" name="net_contents" type="text" placeholder="750 mL" maxlength="500" />
+              </div>
+            </div>
+
+            <label class="input-label" for="class_type">Class / type</label>
+            <input form="single-form" id="class_type" name="class_type" type="text" placeholder="Kentucky Straight Bourbon Whiskey" maxlength="500" />
+
+            <label class="input-label" for="alcohol_content">Alcohol content</label>
+            <input form="single-form" id="alcohol_content" name="alcohol_content" type="text" placeholder="45% Alc./Vol. (90 Proof)" maxlength="500" />
+
+            <label class="input-label" for="producer_name_address">Bottler / producer name &amp; address</label>
+            <input form="single-form" id="producer_name_address" name="producer_name_address" type="text" placeholder="Old Tom Distillery, Bardstown, KY" maxlength="500" />
+
+            <label class="input-label" for="country_of_origin">Country of origin <span class="hint">imports only</span></label>
+            <input form="single-form" id="country_of_origin" name="country_of_origin" type="text" placeholder="Product of Scotland" maxlength="500" />
+          </div>
+        </div>
+
+        <button id="verify-btn" class="primary-btn" type="submit" form="single-form">Verify label</button>
+
+        <div id="single-status" class="status-line hidden" role="status" aria-live="polite"></div>
+        <div id="single-result" class="result hidden"></div>
+      </section>
+
+      <!-- ---------- BATCH ---------- -->
+      <section id="panel-batch" class="panel hidden" role="tabpanel" aria-label="Check many labels">
+        <div class="batch-help">
+          <strong>Bulk verification — up to 300 labels at once.</strong>
+          <ol>
+            <li>Upload a <strong>CSV</strong> with columns
+              <code>filename, brand_name, beverage_type, class_type, alcohol_content, net_contents, producer_name_address, country_of_origin</code>
+              — only <code>filename</code> and <code>brand_name</code> are required.</li>
+            <li>Upload <strong>all the label images</strong>, named to match the <code>filename</code> column.</li>
+          </ol>
+        </div>
+
+        <form id="batch-form">
+          <div class="grid-2">
+            <div>
+              <label class="input-label" for="csv-input">Application data (CSV)</label>
+              <input id="csv-input" class="file-input" type="file" accept=".csv,text/csv" required />
+            </div>
+            <div>
+              <label class="input-label" for="batch-images-input">Label images (select all)</label>
+              <input id="batch-images-input" class="file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple required />
+            </div>
+          </div>
+          <button id="batch-btn" class="primary-btn" type="submit">Verify all labels</button>
+        </form>
+
+        <div id="batch-status" class="status-line hidden" role="status" aria-live="polite"></div>
+        <div id="batch-summary" class="batch-summary hidden"></div>
+        <div id="batch-results" class="batch-results"></div>
+      </section>
+    </main>
+
+    <footer class="foot">Standalone prototype · images processed in memory, never stored</footer>
+  </div>
+
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Label details">
+    <div class="modal-card">
+      <button id="modal-close" class="modal-close" type="button" aria-label="Close">&times;</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
