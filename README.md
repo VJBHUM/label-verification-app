@@ -1,5 +1,8 @@
 # TTB Label Verification
 
+![Python](https://img.shields.io/badge/python-3.10%2B-blue)
+![License: MIT](https://img.shields.io/badge/license-MIT-green)
+
 An AI-powered web application that verifies an alcohol beverage label against the
 data filed in its COLA application. A compliance agent uploads a photo of the
 label plus the application details; the app reads the label, compares every
@@ -35,7 +38,7 @@ health-warning rule in part 16):
 
 ## Quick start (local)
 
-Requires **Python 3.10+** and an Anthropic API key.
+Requires **Python 3.10+** and a model API key.
 
 ```bash
 cd label-verification-app
@@ -100,26 +103,30 @@ One process serves both the API and the UI, so it deploys as a single unit.
 
 ```
 backend/
-  main.py       FastAPI: endpoints, access gate, rate limits, security headers, PII-free logging
-  auth.py       Shared-passcode gate: signed session cookies + per-IP rate limiting
-  imaging.py    Secure image intake: magic-byte validation, EXIF/GPS stripping, bomb guard, normalization
-  verifier.py   The model call + matching rules, timeouts, retries, concurrency guards
-  models.py     Pydantic request/result schemas (the structured-output contract)
+  main.py         FastAPI: endpoints, access gate, rate limits, security headers, PII-free logging
+  auth.py         Shared-passcode gate: signed session cookies + per-IP rate limiting
+  imaging.py      Secure image intake: magic-byte validation, EXIF/GPS stripping, bomb guard, normalization
+  verifier.py     The model call + matching rules, deterministic verdict, timeouts, concurrency guards
+  models.py       Pydantic request/result schemas (the structured-output contract)
 frontend/
-  index.html    Single-page app UI (no build step)
-  login.html    Sign-in page
-  styles.css    Shared styling — large, high-contrast, keyboard-accessible
-  app.js        Progressive rendering; all data inserted via DOM APIs (no innerHTML → no XSS)
+  index.html      Single-page app UI (no build step)
+  login.html      Sign-in page
+  styles.css      Shared styling — large, high-contrast, keyboard-accessible
+  app.js          Progressive rendering; all data inserted via DOM APIs (no innerHTML → no XSS)
   login.js
+tests/            pytest suite (imaging, auth, verdict logic, HTTP layer) — no API key required
+samples/          example batch CSV + label images
+Dockerfile        container image for portable deployment
+render.yaml       one-click Render blueprint
 ```
 
 **Why a vision-language model.** This task is not pure OCR — it must read messy
 photos, fuzzy-match names, apply an exact-match rule to the warning, and use
 judgment about what counts as a real mismatch. A vision-language model does all
-of that in one call. The app uses **Anthropic's Claude** with a **forced
-tool-call schema** (structured output), so the model returns schema-validated
-JSON that the UI renders directly — nothing downstream ever parses free-form
-text. The model is swappable via one environment variable.
+of that in one call. The app calls a **vision-language model** through its API
+with a **forced tool-call schema** (structured output), so the model returns
+schema-validated JSON that the UI renders directly — nothing downstream ever
+parses free-form text. The model is swappable via one environment variable.
 
 ---
 
@@ -183,12 +190,30 @@ FedRAMP-authorized region rather than a public endpoint.
 
 ---
 
+## Development & testing
+
+```bash
+make install     # runtime + dev dependencies
+make dev         # run locally with autoreload
+make test        # run the pytest suite
+make lint        # ruff
+```
+
+The suite (`tests/`) covers the image-intake trust boundary, the access gate and
+rate limiting, the deterministic verdict logic, and the HTTP layer via Starlette's
+`TestClient`. **None of it requires an API key** — the verdict roll-up is pure
+logic, so it's unit-tested directly. Lint and tests both run from the Makefile
+(`make lint`, `make test`).
+
 ## Deploy
 
 - **Render:** a `render.yaml` blueprint is included — create the service from this
   repo, set `ANTHROPIC_API_KEY` and `APP_ACCESS_CODE` in the dashboard
   (`APP_SECRET_KEY` is generated automatically). A `Procfile` is also provided for
   Railway/Heroku-style hosts.
+- **Docker:** `docker build -t label-verification . && docker run -p 8000:8000
+  --env-file .env label-verification` — runs anywhere, including inside a network
+  boundary.
 - **Anywhere else:** `uvicorn backend.main:app --host 0.0.0.0 --port $PORT` with
   the environment variables set.
 

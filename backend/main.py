@@ -252,8 +252,8 @@ async def verify_batch_endpoint(
     csv_bytes = await csv_file.read()
     try:
         text = csv_bytes.decode("utf-8-sig")
-    except UnicodeDecodeError:
-        raise HTTPException(status_code=400, detail="CSV must be UTF-8 encoded.")
+    except UnicodeDecodeError as exc:
+        raise HTTPException(status_code=400, detail="CSV must be UTF-8 encoded.") from exc
     reader = csv.DictReader(io.StringIO(text))
     fieldnames = reader.fieldnames or []
     if "filename" not in fieldnames or "brand_name" not in fieldnames:

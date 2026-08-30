@@ -1,0 +1,16 @@
+# Tooling configuration (linting + tests). The app is deployed via
+# requirements.txt, not installed as a package, so no [project]/[build-system].
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+# E501: long lines are fine in the system prompt; B008: FastAPI uses File()/Form()
+# as argument defaults by design.
+ignore = ["E501", "B008"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

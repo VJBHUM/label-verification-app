@@ -6,7 +6,7 @@ content, net contents, name/address of the bottler or producer, country of
 origin for imports, and the Government Health Warning.
 """
 
-from typing import List, Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -55,7 +55,7 @@ class GovernmentWarningCheck(BaseModel):
     legible: bool = Field(..., description="Is the warning a legible size, not buried in tiny/obscured text?")
     status: Literal["pass", "fail"]
     found_text: str = Field(..., description="The warning text as read from the label ('' if none)")
-    issues: List[str] = Field(..., description="Specific problems found (empty if it passes)")
+    issues: list[str] = Field(..., description="Specific problems found (empty if it passes)")
 
 
 class LabelVerification(BaseModel):
@@ -63,7 +63,7 @@ class LabelVerification(BaseModel):
 
     overall_status: Literal["pass", "fail", "needs_review"]
     summary: str = Field(..., description="One-sentence plain-language summary for the agent")
-    field_checks: List[FieldCheck]
+    field_checks: list[FieldCheck]
     government_warning: GovernmentWarningCheck
     image_quality_ok: bool = Field(..., description="Was the image clear enough to read confidently?")
     image_quality_note: str = Field(..., description="Note on angle/glare/lighting issues, '' if fine")
@@ -73,8 +73,8 @@ class BatchItemResult(BaseModel):
     """One row in a batch run: the filename, plus its result or an error."""
 
     filename: str
-    result: Optional[LabelVerification] = None
-    error: Optional[str] = None
+    result: LabelVerification | None = None
+    error: str | None = None
 
 
 class BatchResponse(BaseModel):
@@ -85,4 +85,4 @@ class BatchResponse(BaseModel):
     failed: int
     needs_review: int
     errored: int
-    results: List[BatchItemResult]
+    results: list[BatchItemResult]

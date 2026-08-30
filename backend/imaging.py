@@ -122,10 +122,10 @@ def normalize_image(data: bytes) -> tuple[bytes, str]:
                 return out.getvalue(), "image/png"
             img.convert("RGB").save(out, format="JPEG", quality=JPEG_QUALITY, optimize=True)
             return out.getvalue(), "image/jpeg"
-    except Image.DecompressionBombError:
-        raise ImageError("Image dimensions are too large to process safely.")
+    except Image.DecompressionBombError as exc:
+        raise ImageError("Image dimensions are too large to process safely.") from exc
     except ImageError:
         raise
-    except Exception:
+    except Exception as exc:
         # Corrupt file, truncated upload, unsupported internal format, etc.
-        raise ImageError("The file could not be read as a valid image.")
+        raise ImageError("The file could not be read as a valid image.") from exc
