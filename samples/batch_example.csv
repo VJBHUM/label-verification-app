@@ -1,4 +1,5 @@
 filename,brand_name,beverage_type,class_type,alcohol_content,net_contents,producer_name_address,country_of_origin
-old_tom.png,OLD TOM DISTILLERY,Distilled Spirits,Kentucky Straight Bourbon Whiskey,45% Alc./Vol. (90 Proof),750 mL,"Old Tom Distillery, Bardstown, KY",
-stones_throw.jpg,Stone's Throw,Wine,California Red Wine,13.5% Alc./Vol.,750 mL,"Stone's Throw Cellars, Napa, CA",
-harbor_gin.png,HARBOR GIN CO.,Distilled Spirits,London Dry Gin,40% Alc./Vol. (80 Proof),700 mL,"Harbor Gin Co., London",Product of England
+lamberts.png,LAMBERT'S,Wine,American Steuben,12% Alc/Vol,750 mL,"Lambert's Vintage Wines, Weston, WV",
+prinsi.jpg,PRINSI,Wine,Red Table Wine,14% by Volume,750 ml,"Az. Agr. Prinsi, Neive, Italia",Product of Italy
+fail_titlecase.png,LAMBERT'S,Wine,,,,,
+lamberts_mismatch.png,LAMBERT'S,Wine,American Steuben,40% Alc/Vol,750 mL,,
