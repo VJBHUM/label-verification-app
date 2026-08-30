@@ -79,7 +79,10 @@ origin and the label omits it, mark it "missing".
 GOVERNMENT HEALTH WARNING — STRICT. Evaluate these independently:
 - present: is a government warning on the label at all?
 - header_all_caps: the words "GOVERNMENT WARNING" appear in ALL CAPITAL LETTERS.
-- text_matches_exactly: the full statement is WORD-FOR-WORD the following text:
+- text_matches_exactly: the statement contains the mandated wording word-for-word and in order. \
+Compare the WORDS, numbers, and punctuation only — IGNORE letter case (a warning printed in all \
+capital letters is fine and common) and IGNORE line breaks or end-of-line hyphenation (e.g. \
+"SUR-GEON" split across two lines still reads "surgeon"). The mandated text is:
 {GOVERNMENT_WARNING}
 - legible: a reasonable type size, not shrunk to tiny print and not obscured or buried.
 - header_bold: the words "GOVERNMENT WARNING" appear in bold. Report your best visual assessment. \
@@ -184,9 +187,40 @@ async def verify_label(
 
     for block in response.content:
         if block.type == "tool_use":
-            return LabelVerification.model_validate(block.input)
+            return _finalize(LabelVerification.model_validate(block.input))
     # Safety-classifier refusal or no tool call — never leak a raw object.
     raise RuntimeError("The label could not be verified (no structured result returned).")
+
+
+def _finalize(result: LabelVerification) -> LabelVerification:
+    """Derive the warning status and overall verdict deterministically.
+
+    The model reads the label (the hard, judgment part); the pass/fail roll-up is
+    pure logic, so we compute it in code rather than trust the model to be
+    self-consistent about it. This guarantees, e.g., that a non-all-caps or
+    non-exact warning is always a FAIL.
+    """
+    gw = result.government_warning
+    warning_fails = (
+        not gw.present
+        or not gw.header_all_caps
+        or not gw.text_matches_exactly
+        or not gw.legible
+    )
+    gw.status = "fail" if warning_fails else "pass"
+
+    field_mismatch = any(f.status == "mismatch" for f in result.field_checks)
+    field_missing = any(f.status == "missing" for f in result.field_checks)
+
+    if field_mismatch or warning_fails:
+        result.overall_status = "fail"
+    elif (not gw.header_bold) or field_missing or not result.image_quality_ok:
+        # Compliant on the hard rules, but something needs a human's eyes:
+        # an ambiguous (non-bold) header, an unread field, or a poor image.
+        result.overall_status = "needs_review"
+    else:
+        result.overall_status = "pass"
+    return result
 
 
 async def verify_batch(items, concurrency: int = BATCH_CONCURRENCY):

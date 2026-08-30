@@ -21,6 +21,15 @@ import os
 
 from PIL import Image, ImageOps
 
+# Enable HEIC/HEIF (the default format for iPhone photos) if the plugin is present.
+try:
+    from pillow_heif import register_heif_opener
+
+    register_heif_opener()
+    _HEIF_OK = True
+except Exception:  # plugin missing — HEIC uploads get a clear error, others unaffected
+    _HEIF_OK = False
+
 # Guard against decompression bombs: refuse to fully decode anything that would
 # expand past this many pixels (~50 MP — comfortably above any real bottle photo).
 Image.MAX_IMAGE_PIXELS = int(os.environ.get("LABEL_VERIFIER_MAX_PIXELS", str(50_000_000)))
@@ -39,8 +48,16 @@ class ImageError(ValueError):
     """Raised for any invalid / unsafe / unreadable image. Message is user-safe."""
 
 
+_HEIF_BRANDS = {b"heic", b"heix", b"hevc", b"hevx", b"heim", b"heis",
+                b"hevm", b"hevs", b"mif1", b"msf1", b"avif"}
+
+
 def _sniff_media_type(data: bytes) -> str | None:
-    """Detect image type from magic bytes. Returns a media type or None."""
+    """Detect image type from magic bytes. Returns a media type or None.
+
+    Covers the formats real users actually upload: PNG, JPEG, GIF, WEBP, plus
+    TIFF/BMP scans and HEIC/HEIF/AVIF (iPhone photos).
+    """
     if data.startswith(b"\x89PNG\r\n\x1a\n"):
         return "image/png"
     if data.startswith(b"\xff\xd8\xff"):
@@ -49,6 +66,13 @@ def _sniff_media_type(data: bytes) -> str | None:
         return "image/gif"
     if len(data) >= 12 and data[0:4] == b"RIFF" and data[8:12] == b"WEBP":
         return "image/webp"
+    if data.startswith((b"II*\x00", b"MM\x00*")):
+        return "image/tiff"
+    if data.startswith(b"BM"):
+        return "image/bmp"
+    # HEIC/HEIF/AVIF: an ISO-BMFF file whose 'ftyp' box brand is a HEIF brand.
+    if len(data) >= 12 and data[4:8] == b"ftyp" and data[8:12].lower() in _HEIF_BRANDS:
+        return "image/heic"
     return None
 
 
@@ -66,8 +90,17 @@ def normalize_image(data: bytes) -> tuple[bytes, str]:
             f"Image is too large (max {MAX_RAW_BYTES // (1024 * 1024)} MB). "
             "Please use a smaller photo."
         )
-    if _sniff_media_type(data) is None:
-        raise ImageError("Unsupported or unreadable file. Please upload a PNG, JPEG, WEBP, or GIF image.")
+    sniffed = _sniff_media_type(data)
+    if sniffed is None:
+        raise ImageError(
+            "Unsupported or unreadable file. Please upload an image "
+            "(PNG, JPEG, HEIC, WEBP, GIF, TIFF, or BMP)."
+        )
+    if sniffed == "image/heic" and not _HEIF_OK:
+        raise ImageError(
+            "HEIC images aren't supported on this server. Please convert to JPEG "
+            "or PNG (on iPhone: Settings → Camera → Formats → Most Compatible)."
+        )
 
     try:
         with Image.open(io.BytesIO(data)) as img:

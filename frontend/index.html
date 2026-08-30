@@ -51,9 +51,9 @@
                     </svg>
                   </span>
                   <span class="big">Drop a label image here</span>
-                  <span class="small">or click to browse — PNG, JPEG, WEBP</span>
+                  <span class="small">or click to browse — PNG, JPEG, HEIC, WEBP, TIFF</span>
                 </div>
-                <input id="image-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden />
+                <input id="image-input" type="file" accept="image/*,.heic,.heif" hidden />
               </div>
             </form>
           </div>
@@ -120,7 +120,7 @@
             </div>
             <div>
               <label class="input-label" for="batch-images-input">Label images (select all)</label>
-              <input id="batch-images-input" class="file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple required />
+              <input id="batch-images-input" class="file-input" type="file" accept="image/*,.heic,.heif" multiple required />
             </div>
           </div>
           <button id="batch-btn" class="primary-btn" type="submit">Verify all labels</button>
